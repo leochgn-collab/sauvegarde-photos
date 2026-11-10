@@ -382,14 +382,44 @@ function lancer_sauvegarde(array $camions = []): array
     return [$rc, implode("\n", $sortie)];
 }
 
-function occ(array $args, array $env = []): array
+/**
+ * Lance une commande occ de Nextcloud (en www-data, comme l'interface).
+ * Entrée fermée (aucune question ne peut bloquer) et délai maximum : la page ne peut jamais tourner sans fin.
+ */
+function occ(array $args, array $env = [], int $delai = 20): array
 {
     $p = proc_open(array_merge([PHP_CLI, NC_OCC], $args),
-        [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null,
-        $env + ['PATH' => '/usr/local/bin:/usr/bin:/bin']);
+        [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null,
+        $env + ['PATH' => '/usr/local/bin:/usr/bin:/bin', 'HOME' => '/var/www', 'LANG' => 'C.UTF-8']);
     if (!is_resource($p)) return [1, 'Impossible de lancer occ'];
-    $out = stream_get_contents($pipes[1]) . stream_get_contents($pipes[2]);
-    fclose($pipes[1]); fclose($pipes[2]);
+    fclose($pipes[0]);
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+    $out = '';
+    $fin = microtime(true) + $delai;
+    $ouverts = [1 => $pipes[1], 2 => $pipes[2]];
+    while ($ouverts) {
+        $reste = $fin - microtime(true);
+        if ($reste <= 0) {
+            proc_terminate($p, 9);
+            foreach ($ouverts as $f) fclose($f);
+            proc_close($p);
+            error_log('sauvegarde-photos : occ ' . ($args[0] ?? '') . " bloqué plus de {$delai} s, arrêté");
+            return [124, trim($out) . "\n(occ " . ($args[0] ?? '') . " ne répond pas après {$delai} s)"];
+        }
+        $lire = array_values($ouverts);
+        $e = $w = null;
+        if (@stream_select($lire, $w, $e, (int)ceil($reste)) === false) break;
+        foreach ($lire as $f) {
+            $bloc = fread($f, 65536);
+            if ($bloc !== false && $bloc !== '') $out .= $bloc;
+            if (feof($f)) {
+                fclose($f);
+                $ouverts = array_filter($ouverts, fn($x) => $x !== $f);
+            }
+        }
+    }
+    foreach ($ouverts as $f) fclose($f);
     return [proc_close($p), trim($out)];
 }
 
@@ -410,16 +440,22 @@ function nc_url(): string
 {
     $u = (string)(reglages_web()['nc_url'] ?? '');
     if ($u !== '') return $u;
-    // Par défaut : overwrite.cli.url de Nextcloud, si elle est en HTTPS
-    [$rc, $out] = occ(['config:system:get', 'overwrite.cli.url']);
+    // Par défaut : overwrite.cli.url de Nextcloud, si elle est en HTTPS (lue une fois, puis mémorisée)
+    [$rc, $out] = occ(['config:system:get', 'overwrite.cli.url'], [], 10);
     $out = rtrim(trim($out), '/');
-    return ($rc === 0 && preg_match('~^https://[^\s/]+(/\S*)?$~', $out)) ? $out : '';
+    if ($rc === 0 && preg_match('~^https://[^\s/]+(/\S*)?$~', $out)) {
+        $w = reglages_web();
+        $w['nc_url'] = $out;
+        enregistrer_reglages_web($w);
+        return $out;
+    }
+    return '';
 }
 
 /** Appareils (mots de passe d'application) connectés à un compte Nextcloud. */
 function appareils(string $c): ?array
 {
-    [$rc, $out] = occ(['user:auth-tokens:list', '--output=json', $c]);
+    [$rc, $out] = occ(['user:auth-tokens:list', '--output=json', $c], [], 15);
     if ($rc !== 0) return null;
     $l = json_decode($out, true);
     if (!is_array($l)) return null;
