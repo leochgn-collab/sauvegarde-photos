@@ -33,8 +33,24 @@ if ($post) {
         set_time_limit(300);
         session_write_close();   // ne bloque pas les autres pages pendant ce temps
         $debut = microtime(true);
+        $cree = false;
+        // Compte absent de Nextcloud : on le crée (mot de passe aléatoire, jamais utilisé :
+        // le téléphone se connecte avec son mot de passe d'application)
+        [$existe] = occ(['user:info', $c], [], 30);
+        if ($existe !== 0) {
+            $aleatoire = rtrim(strtr(base64_encode(random_bytes(24)), '+/', 'Aa'), '=') . '-9x!';
+            [$rcAjout, $outAjout] = occ(['user:add', '--password-from-env', '--display-name=' . $nom, $c], ['OC_PASS' => $aleatoire], 150);
+            [$existe] = occ(['user:info', $c], [], 30);
+            if ($existe !== 0) {
+                session_start();
+                flash("Le compte Nextcloud « $c » n'existe pas et sa création a échoué : " . mb_substr($outAjout, 0, 300), 'erreur');
+                rediriger(['p' => 'installer', 'c' => $c]);
+            }
+            $cree = true;
+        }
         [$rc, $out] = occ(['user:auth-tokens:add', '--no-interaction', '--name=' . $appareil, $c], [], 150);
         session_start();
+        if ($cree) flash("Le compte Nextcloud « $c » n'existait pas : il a été créé.");
         $duree = (int)round(microtime(true) - $debut);
         if ($rc !== 0 || !preg_match('/app password:\s*(\S+)/i', $out, $m)) {
             flash("Impossible de créer le mot de passe d'application (après {$duree} s) : " . mb_substr($out, 0, 300), 'erreur');
