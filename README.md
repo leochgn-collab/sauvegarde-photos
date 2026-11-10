@@ -22,6 +22,7 @@ dans `InstantUpload/` ; à la date prévue, le script les range dans un dossier 
 - **Galerie** + **visionneuse plein écran** (← → / glisser), téléchargement des photos ou d'un dossier en .zip
 - **Suppression** d'une sauvegarde (avec confirmation) et **nettoyage automatique** des anciennes (désactivé par défaut)
 - **Nom et note** par téléphone (immatriculation, chauffeur…)
+- **Thème clair / sombre** (automatique selon l'appareil) et **menu latéral avec icônes** (barre en bas de l'écran sur téléphone)
 - **Comptes** administrateur / lecture seule, connexion avec **double authentification (TOTP)**
 
 ## Prérequis

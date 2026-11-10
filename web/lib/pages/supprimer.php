@@ -18,7 +18,7 @@ if ($post) {
 }
 
 $f = lister_fichiers($dir);
-page_debut('Supprimer une sauvegarde');
+page_debut('Supprimer une sauvegarde', "c:$c");
 echo '<form class="carte confirmation" method="post">' . csrf_champ()
    . '<h1>Supprimer la sauvegarde du ' . h($d) . ' ?</h1>'
    . '<p><b>' . h(nom_camion($c)) . '</b> — ' . count($f) . ' fichiers, ' . taille_lisible(array_sum(array_column($f, 'taille'))) . '.</p>'

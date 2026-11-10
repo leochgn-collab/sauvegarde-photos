@@ -10,7 +10,7 @@ $page = min($pages, max(1, (int)($_GET['page'] ?? 1)));
 $titre = $d === 'en-attente' ? 'En attente' : $d;
 $nom = nom_camion($c);
 
-page_debut("$nom · $titre");
+page_debut("$nom · $titre", "c:$c");
 echo '<p class="fil"><a href="./">Tableau de bord</a> › <a href="' . url(['p' => 'camion', 'c' => $c]) . '">' . h($nom) . '</a> › ' . h($titre) . '</p>'
    . '<div class="entete"><h1>' . h($titre) . ' <small>' . count($fichiers) . ' fichiers · '
    . taille_lisible(array_sum(array_column($fichiers, 'taille'))) . '</small></h1><div class="boutons">'

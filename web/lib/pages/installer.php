@@ -73,7 +73,7 @@ if ($post) {
 }
 
 // ============================================================================
-page_debut("Installer $nom");
+page_debut("Installer $nom", "c:$c");
 echo '<p class="fil"><a href="./">Tableau de bord</a> › <a href="' . url(['p' => 'camion', 'c' => $c]) . '">' . h($nom) . '</a> › Installer un téléphone</p>';
 
 // --- QR code tout juste généré (affiché une seule fois) ---

@@ -628,23 +628,64 @@ function rediriger(array $p = []): never
     exit;
 }
 
+/** Icônes du menu (traits SVG, couleur du texte). */
+function icone(string $nom): string
+{
+    $d = [
+        'accueil'  => '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+        'camion'   => '<path d="M1 4h14v12H1z"/><path d="M15 8h4l4 4v4h-8z"/><circle cx="5.5" cy="18" r="2"/><circle cx="18.5" cy="18" r="2"/>',
+        'reglages' => '<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>'
+                    . '<circle cx="9" cy="6" r="2" class="plein"/><circle cx="15" cy="12" r="2" class="plein"/><circle cx="7" cy="18" r="2" class="plein"/>',
+        'comptes'  => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        'moi'      => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        'theme'    => '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" class="plein"/>',
+        'sortir'   => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+    ][$nom] ?? '';
+    return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' . $d . '</svg>';
+}
+
+/** Thème choisi : "clair", "sombre" ou "auto" (suit le réglage de l'appareil). */
+function theme(): string
+{
+    $t = $_COOKIE['sp_theme'] ?? 'auto';
+    return in_array($t, ['clair', 'sombre'], true) ? $t : 'auto';
+}
+
 function page_debut(string $titre, string $actif = '', string $classe = ''): void
 {
-    echo '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
+    $avecMenu = connecte() && $classe !== 'visionneuse';
+    $classes = trim($classe . ($avecMenu ? ' avec-menu' : ''));
+    echo '<!DOCTYPE html><html lang="fr" data-theme="' . theme() . '"><head><meta charset="utf-8">'
        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+       . '<meta name="color-scheme" content="light dark">'
        . '<title>' . h($titre) . ' · Sauvegardes photos</title>'
-       . '<link rel="stylesheet" href="style.css"></head><body' . ($classe ? ' class="' . h($classe) . '"' : '') . '>';
-    if (connecte() && $classe !== 'visionneuse') {
-        echo '<header class="barre"><a class="logo" href="./"><span class="pastille"></span>Sauvegardes photos</a><nav>';
-        $liens = ['' => 'Tableau de bord'];
-        if (est_admin()) $liens += ['reglages' => 'Réglages', 'comptes' => 'Comptes'];
-        $liens['moncompte'] = h(moi());
-        foreach ($liens as $p => $lib) {
-            $cls = $actif === $p ? ' class="actif"' : '';
-            echo '<a' . $cls . ' href="' . ($p ? url(['p' => $p]) : './') . '">' . $lib . '</a>';
+       . '<link rel="stylesheet" href="style.css"><script src="theme.js" defer></script></head>'
+       . '<body' . ($classes ? ' class="' . h($classes) . '"' : '') . '>';
+    if ($avecMenu) {
+        // $court : libellé de la barre du bas sur téléphone
+        $lien = function (string $p, string $ico, string $lib, string $cle = '', array $q = [], string $court = '') use ($actif) {
+            $cle = $cle ?: $p;
+            $href = $q ? url($q) : ($p ? url(['p' => $p]) : './');
+            return '<a class="entree' . ($actif === $cle ? ' actif' : '') . '" href="' . $href . '"'
+                 . ($actif === $cle ? ' aria-current="page"' : '') . '>' . icone($ico)
+                 . '<span class="long">' . $lib . '</span><span class="court">' . ($court ?: $lib) . '</span></a>';
+        };
+        echo '<aside class="menu"><a class="logo" href="./"><span class="pastille"></span><span>Sauvegardes photos</span></a>'
+           . '<nav class="principal">' . $lien('', 'accueil', 'Tableau de bord', '', [], 'Accueil');
+        $tel = camions();
+        if ($tel) {
+            echo '<div class="groupe"><span class="titre-groupe">Téléphones</span>';
+            foreach ($tel as $c) {
+                echo $lien('camion', 'camion', h(nom_camion($c)), "c:$c", ['p' => 'camion', 'c' => $c]);
+            }
+            echo '</div>';
         }
-        echo '<form method="post" action="' . url(['p' => 'deconnexion']) . '">' . csrf_champ()
-           . '<button class="lien">Déconnexion</button></form></nav></header>';
+        if (est_admin()) echo $lien('reglages', 'reglages', 'Réglages') . $lien('comptes', 'comptes', 'Comptes');
+        echo '</nav><div class="bas">' . $lien('moncompte', 'moi', h(moi()), '', [], 'Compte')
+           . '<button type="button" class="entree" id="bouton-theme" title="Changer de thème">' . icone('theme') . '<span class="long">Thème : '
+           . ['auto' => 'automatique', 'clair' => 'clair', 'sombre' => 'sombre'][theme()] . '</span><span class="court">Thème</span></button>'
+           . '<form method="post" action="' . url(['p' => 'deconnexion']) . '">' . csrf_champ()
+           . '<button class="entree">' . icone('sortir') . '<span class="long">Déconnexion</span><span class="court">Quitter</span></button></form></div></aside>';
     }
     echo '<main>';
     foreach (flash() as [$type, $msg]) {

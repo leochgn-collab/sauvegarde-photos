@@ -7,7 +7,7 @@ $s = resume_camion($c);
 $nom = nom_camion($c);
 $note = trim((string)(infos_camions()[$c]['note'] ?? ''));
 
-page_debut($nom);
+page_debut($nom, "c:$c");
 echo '<p class="fil"><a href="./">Tableau de bord</a> › ' . h($nom) . '</p>'
    . '<div class="entete"><div><h1>' . h($nom) . ' <span class="etat ' . $s['etat'][0] . '">' . $s['etat'][1] . '</span>'
    . ($nom !== $c ? ' <small>' . h($c) . '</small>' : '') . '</h1>'
