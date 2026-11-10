@@ -160,13 +160,14 @@ foreach (camions($r) as $c) {
        . '<td><input form="f-tel" name="nom[' . h($c) . ']" maxlength="60" placeholder="' . h($c) . '" value="' . h($infos[$c]['nom'] ?? '') . '"></td>'
        . '<td><input form="f-tel" name="note[' . h($c) . ']" maxlength="200" placeholder="Immatriculation, chauffeur…" value="' . h($infos[$c]['note'] ?? '') . '"></td>'
        . '<td class="centre"><input form="f-tel" type="checkbox" name="pause[' . h($c) . ']" value="1"' . (en_pause($c, $r) ? ' checked' : '') . ' title="Mettre en pause"></td>'
-       . '<td class="actions"><form method="post">' . csrf_champ() . '<input type="hidden" name="action" value="retirer">'
+       . '<td class="actions"><a class="petit" href="' . url(['p' => 'installer', 'c' => $c]) . '">Installer</a> <form method="post" class="en-ligne">' . csrf_champ() . '<input type="hidden" name="action" value="retirer">'
        . '<input type="hidden" name="camion" value="' . h($c) . '"><button class="petit danger">Retirer</button></form></td></tr>';
 }
 if (!camions($r)) echo '<tr><td colspan="5" class="vide">Aucun téléphone.</td></tr>';
 echo '</tbody></table></div><button form="f-tel" class="bouton">Enregistrer les téléphones</button>'
    . '<p class="aide">Pause = ce téléphone n\'est plus sauvegardé ni surveillé (ses photos restent en attente). '
-   . 'Retirer = il disparaît de la liste ; son compte Nextcloud et ses photos restent en place.</p>';
+   . 'Retirer = il disparaît de la liste ; son compte Nextcloud et ses photos restent en place. '
+   . 'Installer = QR code à scanner dans l\'app Nextcloud du téléphone.</p>';
 
 echo '<h3 class="sous-titre">Ajouter un téléphone</h3><form method="post" class="ajout">' . csrf_champ() . '<input type="hidden" name="action" value="ajouter">'
    . '<label>Identifiant Nextcloud<input name="camion" placeholder="Camion4" pattern="[A-Za-z0-9._@\-]{1,64}" required></label>'

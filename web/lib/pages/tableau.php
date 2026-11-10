@@ -53,7 +53,8 @@ foreach (camions($r) as $c) {
        . '<dt>En attente</dt><dd>' . $s['attente'] . ' fichier' . ($s['attente'] > 1 ? 's' : '') . '</dd>'
        . '<dt>Dernière sauvegarde</dt><dd>' . h($s['derniere_sauv'] ?? '—') . '</dd>'
        . '<dt>Total sauvegardé</dt><dd>' . $s['total_photos'] . ' · ' . taille_lisible($s['total_taille']) . '</dd></dl>'
-       . '<div class="pied"><a class="petit" href="' . url(['p' => 'camion', 'c' => $c]) . '">Voir les photos</a>';
+       . '<div class="pied"><a class="petit" href="' . url(['p' => 'camion', 'c' => $c]) . '">Voir les photos</a>'
+       . ($admin && $s['etat'][1] === 'Jamais connecté' ? '<a class="petit" href="' . url(['p' => 'installer', 'c' => $c]) . '">Installer le téléphone</a>' : '');
     if ($admin && !en_pause($c, $r)) {
         echo '<form method="post" action="' . url(['p' => 'lancer']) . '">' . csrf_champ()
            . '<input type="hidden" name="c[]" value="' . h($c) . '"><button class="petit">Sauvegarder maintenant</button></form>';

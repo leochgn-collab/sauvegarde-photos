@@ -393,6 +393,51 @@ function occ(array $args, array $env = []): array
     return [proc_close($p), trim($out)];
 }
 
+// --- Réglages propres à l'interface (adresse publique de Nextcloud…) ---
+function reglages_web(): array
+{
+    $f = DATA_WEB . '/web.json';
+    return is_readable($f) ? (json_decode((string)file_get_contents($f), true) ?: []) : [];
+}
+
+function enregistrer_reglages_web(array $r): void
+{
+    file_put_contents(DATA_WEB . '/web.json', json_encode($r, JSON_PRETTY_PRINT), LOCK_EX);
+}
+
+/** Adresse publique de Nextcloud (celle que les téléphones utilisent), ou '' si inconnue. */
+function nc_url(): string
+{
+    $u = (string)(reglages_web()['nc_url'] ?? '');
+    if ($u !== '') return $u;
+    // Par défaut : overwrite.cli.url de Nextcloud, si elle est en HTTPS
+    [$rc, $out] = occ(['config:system:get', 'overwrite.cli.url']);
+    $out = rtrim(trim($out), '/');
+    return ($rc === 0 && preg_match('~^https://[^\s/]+(/\S*)?$~', $out)) ? $out : '';
+}
+
+/** Appareils (mots de passe d'application) connectés à un compte Nextcloud. */
+function appareils(string $c): ?array
+{
+    [$rc, $out] = occ(['user:auth-tokens:list', '--output=json', $c]);
+    if ($rc !== 0) return null;
+    $l = json_decode($out, true);
+    if (!is_array($l)) return null;
+    $res = [];
+    foreach ($l as $t) {
+        $type = $t['type'] ?? '';
+        if ($type === 0 || $type === '0' || $type === 'temporary') continue;   // sessions de navigateur
+        $act = $t['lastActivity'] ?? $t['last_activity'] ?? null;
+        $res[] = [
+            'id'    => (string)($t['id'] ?? ''),
+            'nom'   => (string)($t['name'] ?? '?'),
+            'actif' => is_numeric($act) ? (int)$act : (is_string($act) ? (strtotime($act) ?: null) : null),
+        ];
+    }
+    usort($res, fn($a, $b) => ($b['actif'] ?? 0) <=> ($a['actif'] ?? 0));
+    return $res;
+}
+
 /** QR code (SVG) pour la double authentification, si qrencode est installé. */
 function qr_svg(string $texte): ?string
 {

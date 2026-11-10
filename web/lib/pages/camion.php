@@ -12,10 +12,14 @@ echo '<p class="fil"><a href="./">Tableau de bord</a> › ' . h($nom) . '</p>'
    . '<div class="entete"><div><h1>' . h($nom) . ' <span class="etat ' . $s['etat'][0] . '">' . $s['etat'][1] . '</span>'
    . ($nom !== $c ? ' <small>' . h($c) . '</small>' : '') . '</h1>'
    . ($note !== '' ? '<p class="note">' . h($note) . '</p>' : '') . '</div>';
-if ($admin && !en_pause($c)) {
-    echo '<form method="post" action="' . url(['p' => 'lancer']) . '">' . csrf_champ()
-       . '<input type="hidden" name="c[]" value="' . h($c) . '"><input type="hidden" name="retour" value="' . h($c) . '">'
-       . '<button class="bouton">Sauvegarder ce téléphone maintenant</button></form>';
+if ($admin) {
+    echo '<div class="boutons"><a class="bouton secondaire" href="' . url(['p' => 'installer', 'c' => $c]) . '">Installer / gérer le téléphone</a>';
+    if (!en_pause($c)) {
+        echo '<form method="post" action="' . url(['p' => 'lancer']) . '">' . csrf_champ()
+           . '<input type="hidden" name="c[]" value="' . h($c) . '"><input type="hidden" name="retour" value="' . h($c) . '">'
+           . '<button class="bouton">Sauvegarder ce téléphone maintenant</button></form>';
+    }
+    echo '</div>';
 }
 echo '</div>';
 

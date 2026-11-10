@@ -14,6 +14,7 @@ dans `InstantUpload/` ; à la date prévue, le script les range dans un dossier 
 ## Fonctionnalités
 
 - **Planification** : jour, heure et fréquence (chaque semaine, toutes les 2 semaines, chaque mois) ; rattrapage si le serveur était éteint
+- **Installation d'un téléphone en 30 secondes** : QR code à scanner dans l'app Nextcloud (mot de passe d'application dédié), liste des appareils connectés et coupure d'accès d'un téléphone perdu
 - **Sauvegarde immédiate** de tous les téléphones ou d'un seul
 - **Pause** globale ou par téléphone
 - **Alertes ntfy** : téléphone silencieux depuis X jours, disque presque plein, plantage du script ; bouton de test
@@ -57,6 +58,9 @@ bash install.sh
 Réglages, comptes, noms des téléphones et historique sont conservés.
 
 ## Sur chaque téléphone
+
+Le plus simple : dans l'interface, page du téléphone → **Installer / gérer le téléphone** → **Générer le QR code**,
+puis suivre la fiche affichée. À la main :
 
 1. Installer l'app **Nextcloud** et se connecter avec le compte du téléphone.
 2. ☰ → Paramètres → **Envoi automatique** → dossier **Camera** : activer, dossier distant `/InstantUpload`.

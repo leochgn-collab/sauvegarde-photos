@@ -203,3 +203,26 @@ body.visionneuse main { max-width: none; padding: 0; height: 100vh; display: fle
 .vis-nav.droite { right: .8rem; }
 .vis-autre { text-align: center; color: var(--doux); line-height: 2.4; }
 @media (max-width: 640px) { .vis-nav { width: 40px; height: 60px; font-size: 2rem; } }
+
+/* --- installation d'un téléphone (QR code) --- */
+.fiche { max-width: 860px; margin: 0 auto 1rem; }
+.fiche-entete { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.fiche-entete h1 { margin-bottom: .3rem; }
+.avertissement { font-size: .8rem; color: var(--erreur); border: 1px solid var(--erreur); border-radius: 99px; padding: .2rem .7rem; }
+.fiche-corps { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; margin: 1rem 0; }
+.qr.grand { width: 280px; height: 280px; background: #fff; border-radius: 10px; padding: 8px; flex: none; }
+.etapes { flex: 1; min-width: 260px; margin: 0; padding-left: 1.2rem; line-height: 1.6; }
+.etapes li { margin-bottom: .6rem; }
+code { font-family: ui-monospace, Consolas, monospace; background: var(--fond); padding: .1rem .4rem; border-radius: 5px; font-size: .9em; }
+details.manuel { margin: 1rem 0; }
+details.manuel summary { cursor: pointer; color: var(--doux); }
+details.manuel dl { margin-top: .8rem; max-width: 560px; }
+details.manuel dd { text-align: left; word-break: break-all; }
+@media print {
+  body { background: #fff; color: #000; }
+  .barre, .no-print, .fil, .flash { display: none !important; }
+  .carte { border: 1px solid #999; background: #fff; }
+  .note, small, dt, details.manuel summary { color: #444; }
+  code { background: #eee; color: #000; }
+  details.manuel > *:not(summary) { display: block; }
+}

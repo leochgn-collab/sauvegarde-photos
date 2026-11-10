@@ -19,7 +19,7 @@ if ($p === 'deconnexion') {
 
 $page = match ($p) {
     'mini', 'apercu', 'fichier', 'zip' => 'medias',
-    'lancer', 'camion', 'dossier', 'photo', 'supprimer', 'reglages', 'comptes', 'moncompte' => $p,
+    'lancer', 'camion', 'dossier', 'photo', 'supprimer', 'reglages', 'comptes', 'moncompte', 'installer' => $p,
     default => 'tableau',
 };
 require __DIR__ . "/../lib/pages/$page.php";
