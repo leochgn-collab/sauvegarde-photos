@@ -28,12 +28,8 @@ if ($post) {
         }
         $appareil = trim((string)($_POST['appareil'] ?? '')) ?: "Téléphone $nom";
         $appareil = mb_substr(preg_replace('/[^\p{L}\p{N} ._()-]/u', '', $appareil), 0, 60) . ' — ' . date('d-m-Y');
-        $mdp = (string)($_POST['mdp'] ?? '');
-        $args = ['user:auth-tokens:add', '--no-interaction', '--name=' . $appareil];
-        $env = [];
-        if ($mdp !== '') { $args[] = '--password-from-env'; $env['NC_PASS'] = $mdp; }
-        $args[] = $c;
-        [$rc, $out] = occ($args, $env);
+        // Sans le mot de passe du compte : suffisant pour envoyer et consulter des photos
+        [$rc, $out] = occ(['user:auth-tokens:add', '--no-interaction', '--name=' . $appareil, $c]);
         if ($rc !== 0 || !preg_match('/app password:\s*(\S+)/i', $out, $m)) {
             flash('Impossible de créer le mot de passe d\'application : ' . mb_substr($out, 0, 300), 'erreur');
             rediriger(['p' => 'installer', 'c' => $c]);
@@ -100,8 +96,7 @@ if ($url === '') {
 echo '<form method="post">' . csrf_champ() . '<input type="hidden" name="action" value="generer">'
    . '<label>Nom de l\'appareil <small>(pour le reconnaître dans la liste)</small>'
    . '<input name="appareil" maxlength="60" placeholder="Samsung A15 de ' . h($nom) . '"></label>'
-   . '<label>Mot de passe du compte Nextcloud <small>(facultatif)</small><input type="password" name="mdp" autocomplete="new-password"></label>'
-   . '<p class="aide">Le mot de passe du compte n\'est pas nécessaire pour envoyer des photos. Un <b>mot de passe d\'application</b> propre à ce téléphone est créé : '
+   . '<p class="aide">Un <b>mot de passe d\'application</b> propre à ce téléphone est créé (le mot de passe du compte n\'est pas nécessaire) : '
    . 'il peut être coupé à tout moment sans toucher au compte ni aux autres téléphones.</p>'
    . '<button class="bouton"' . ($url === '' ? ' disabled' : '') . '>Générer le QR code</button></form></section>';
 
