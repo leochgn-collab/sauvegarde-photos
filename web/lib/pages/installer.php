@@ -28,10 +28,16 @@ if ($post) {
         }
         $appareil = trim((string)($_POST['appareil'] ?? '')) ?: "Téléphone $nom";
         $appareil = mb_substr(preg_replace('/[^\p{L}\p{N} ._()-]/u', '', $appareil), 0, 60) . ' — ' . date('d-m-Y');
-        // Sans le mot de passe du compte : suffisant pour envoyer et consulter des photos
-        [$rc, $out] = occ(['user:auth-tokens:add', '--no-interaction', '--name=' . $appareil, $c]);
+        // Sans le mot de passe du compte : suffisant pour envoyer et consulter des photos.
+        // Délai long : pour un compte jamais utilisé, Nextcloud prépare d'abord son espace.
+        set_time_limit(300);
+        session_write_close();   // ne bloque pas les autres pages pendant ce temps
+        $debut = microtime(true);
+        [$rc, $out] = occ(['user:auth-tokens:add', '--no-interaction', '--name=' . $appareil, $c], [], 150);
+        session_start();
+        $duree = (int)round(microtime(true) - $debut);
         if ($rc !== 0 || !preg_match('/app password:\s*(\S+)/i', $out, $m)) {
-            flash('Impossible de créer le mot de passe d\'application : ' . mb_substr($out, 0, 300), 'erreur');
+            flash("Impossible de créer le mot de passe d'application (après {$duree} s) : " . mb_substr($out, 0, 300), 'erreur');
             rediriger(['p' => 'installer', 'c' => $c]);
         }
         // Le mot de passe n'est gardé que le temps d'un affichage
